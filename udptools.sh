@@ -13,16 +13,16 @@ if [[ -e /etc/debian_version ]]; then
     RCLOCAL='/etc/rc.d/rc.local'
     IPTABLES=`rpm -qa |grep iptables`
   else
-	  echo "只支持Debian\Ubuntu\CentOS系统"
-	  exit
+    echo "只支持Debian\Ubuntu\CentOS系统"
+    exit
 fi
 #检查依赖IPTABLES
 if [ "$IPTABLES" == '' ]; then
   if [[ "$OS" = 'debian' ]]; then
-		apt-get update
-		apt-get install iptables -y
+    apt-get update
+    apt-get install iptables -y
   else
-		yum install iptables -y
+    yum install iptables -y
   fi
 fi
 
@@ -36,9 +36,9 @@ fi
 testFun()
 {
   echo $PASSWD
-  echo $IP
-	echo $RPORT
-	echo $MPORT
+  echo $REMOTEIP
+  echo $RPORT
+  echo $MPORT
   echo $LPORT
 }
 
@@ -52,7 +52,7 @@ case $RUNMODE in
   1) 
     read -p "Udp2Raw Password(Udp2Raw密码): " PASSWD
       echo""
-    read -p "Remote Udp2Raw IP(Udp2Raw远程IP): " RIP
+    read -p "Remote Udp2Raw IP(Udp2Raw远程IP): " REMOTEIP
       echo""
     while [[ ! "$RPORT" =~ [1-65535] ]];do
       read -p "Remote Udp2Raw Port(Udp2Raw远程端口): " RPORT
