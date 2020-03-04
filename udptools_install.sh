@@ -86,3 +86,6 @@ fi
 if [ ! -d "/usr/local/udptools/log" ]; then
   mkdir /usr/local/udptools/log
 fi
+
+echo "Udp2Raw BIN: /usr/local/udptools/bin/udp2raw"
+echo "UdpSpeeder BIN:/usr/local/udptools/bin/udpspeeder"
