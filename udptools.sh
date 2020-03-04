@@ -26,21 +26,35 @@ if [ "$IPTABLES" == '' ]; then
   fi
 fi
 
-#判断服务模式
-if pgrep systemd-journal; then
+buildServer()
+{
+  #判断服务模式
+  if pgrep systemd-journal; then
     SYSTEMCTL=1
   else
     SYSTEMCTL=0
-fi
+  fi
+  echo $PASSWD
+  echo $RPORT
+  echo $MPORT
+  echo $LPORT
+}
 
-testFun()
+buildClient()
 {
+  #判断服务模式
+  if pgrep systemd-journal; then
+    SYSTEMCTL=1
+  else
+    SYSTEMCTL=0
+  fi
   echo $PASSWD
   echo $REMOTEIP
   echo $RPORT
   echo $MPORT
   echo $LPORT
 }
+
 
 echo
 echo "Which mode to run this?"
@@ -80,7 +94,7 @@ case $RUNMODE in
       fi
       echo""
     done
-    testFun
+    buildClient
   ;;
   2)
     read -p "Udp2Raw Password(Udp2Raw密码): " PASSWD
@@ -115,6 +129,6 @@ case $RUNMODE in
       fi
       echo""
     done
-    testFun
+    buildServer
   ;;
 esac

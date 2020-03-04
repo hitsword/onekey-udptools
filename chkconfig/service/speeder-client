@@ -1,0 +1,79 @@
+#!/bin/bash
+#
+# speeder startup script for the UDPspeeder Client
+#
+#
+# chkconfig: 345 80 20
+# description: start the udp2raw deamon
+#
+# Source function library
+. /etc/rc.d/init.d/functions
+
+prog=UDPspeeder-Client
+#程序目录
+HOME_DIR=/usr/local/udptools
+#程序文件名
+BIN_NAME=speederv2_x86
+#日志文件
+LOG_FILE=$HOME_DIR/speeder-client.log
+#配置参数
+CONFIG='-c -l0.0.0.0:5394 -r 127.0.0.1:5395 -f20:20 --mode 0'
+#-l0.0.0.0:5394监听5394给原始服务用
+#-r 127.0.0.1:5395连接udp2raw端口
+
+start(){
+  #启动进程
+  sudo -u nobody -b $HOME_DIR/$BIN_NAME $CONFIG >> $LOG_FILE 2>&1
+}
+
+stop(){
+  #结束进程
+  PID=`ps aux|grep $BIN_NAME|grep -e "$CONFIG"|grep -v root|grep -v grep | awk '{print $2}'`
+  kill $PID >/dev/null 2>&1
+}
+
+status(){
+  PID=`ps aux|grep $BIN_NAME|grep -e "$CONFIG"|grep -v root|grep -v grep | awk '{print $2}'`
+  if [ ! -n "$PID" ]; then
+    echo "$prog is stopped."
+  else
+    echo "$prog is running. pid $PID"
+  fi
+}
+
+showLog(){
+  cat $LOG_FILE | tail -n 50
+}
+
+case "$1" in
+start)
+    echo "Starting $prog..."
+    start
+    ;;
+    
+stop)
+    echo "Stopping $prog..."
+    stop
+    ;;
+
+restart)
+    echo "Stopping $prog..."
+    stop
+    sleep 2
+    echo "Starting $prog..."
+    start
+    ;;
+    
+status)
+    status
+    ;;
+    
+log)
+    showLog
+    ;;
+    
+*)
+    echo "Usage: $prog {start|stop|restart|status|log}"
+    ;;
+esac
+exit 0

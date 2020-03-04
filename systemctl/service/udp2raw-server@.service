@@ -5,8 +5,8 @@ Before=                 # 表示需要在某些服务启动之前启动，After�
 
 [Service]  # 核心区域
 Type=forking       # 表示后台运行模式。
-User=nobody        # 设置服务运行的用户
-Group=nobody       # 设置服务运行的用户组
+User=root          # 设置服务运行的用户
+Group=root         # 设置服务运行的用户组
 KillMode=control-group   # 定义systemd如何停止服务
 PIDFile=/usr/local/udptools/pid/udp2raw-%i.pid    # 存放PID的绝对路径
 Restart=no        # 定义服务进程退出后，systemd的重启方式，默认是不重启
