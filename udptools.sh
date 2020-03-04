@@ -33,6 +33,15 @@ if pgrep systemd-journal; then
     SYSTEMCTL=0
 fi
 
+testFun()
+{
+  echo $PASSWD
+  echo $IP
+	echo $RPORT
+	echo $MPORT
+  echo $LPORT
+}
+
 echo
 echo "Which mode to run this?"
 echo "你想运行在什么模式?"
@@ -109,11 +118,3 @@ case $RUNMODE in
     testFun
   ;;
 esac
-
-testFun(){
-  echo $PASSWD
-  echo $IP
-	echo $RPORT
-	echo $MPORT
-  echo $LPORT
-}
