@@ -1,5 +1,5 @@
 [Unit]   # 主要是服务说明
-Description=Udp2RawServer - %i  # 简单描述服务
+Description=UdpSpeederServer - %i  # 简单描述服务
 After=network.target    # 描述服务类别，表示本服务需要在network服务启动后在启动
 Before=                 # 表示需要在某些服务启动之前启动，After和Before字段只涉及启动顺序，不涉及依赖关系。
 
@@ -8,9 +8,9 @@ Type=forking       # 表示后台运行模式。
 User=root          # 设置服务运行的用户
 Group=root         # 设置服务运行的用户组
 KillMode=control-group   # 定义systemd如何停止服务
-PIDFile=/usr/local/udptools/pid/udp2raw-s%i.pid    # 存放PID的绝对路径
+PIDFile=/usr/local/udptools/pid/udpspeeder-s%i.pid    # 存放PID的绝对路径
 Restart=no        # 定义服务进程退出后，systemd的重启方式，默认是不重启
-ExecStart=/usr/local/udptools/udp2raw-s%i.sh      # 服务启动命令，命令需要绝对路径
+ExecStart=/usr/local/udptools/udpspeeder-s%i.sh      # 服务启动命令，命令需要绝对路径
 PrivateTmp=true                               # 表示给服务分配独立的临时空间
    
 [Install]   
