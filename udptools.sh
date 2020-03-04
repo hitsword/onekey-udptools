@@ -71,6 +71,7 @@ case $RUNMODE in
       fi
       echo""
     done
+    testFun
   ;;
   2)
     read -p "Udp2Raw Password(Udp2Raw密码): " PASSWD
@@ -105,10 +106,14 @@ case $RUNMODE in
       fi
       echo""
     done
+    testFun
   ;;
 esac
+
+testFun(){
+  echo $PASSWD
   echo $IP
 	echo $RPORT
 	echo $MPORT
   echo $LPORT
-
+}
