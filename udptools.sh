@@ -41,6 +41,8 @@ echo "   2) Server - 服务端"
 read -p "Run Mode(运行模式) [1-2]: " -e -i 1 RUNMODE
 case $RUNMODE in
   1) 
+    read -p "Udp2Raw Password(Udp2Raw密码): " PASSWD
+      echo""
     read -p "Remote Udp2Raw IP(Udp2Raw远程IP): " RIP
       echo""
     while [[ ! "$RPORT" =~ [1-65535] ]];do
@@ -71,6 +73,8 @@ case $RUNMODE in
     done
   ;;
   2)
+    read -p "Udp2Raw Password(Udp2Raw密码): " PASSWD
+      echo""
     while [[ ! "$RPORT" =~ [1-65535] ]];do
       read -p "Other Server Port(本地其他业务端口): " RPORT
       echo""
