@@ -2,6 +2,7 @@
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 export PATH
 #判断系统
+#useradd -M -s /sbin/nologin -d /usr/local/udptools udptools
 if [[ -e /etc/debian_version ]]; then
     OS=debian
     GROUPNAME=nogroup
@@ -42,7 +43,9 @@ fi
 
 buildServer()
 {
-    echo "-s
+#写入配置
+cat > /usr/local/udptools/conf/udp2raw-s${MPORT}.conf <<EOF
+-s
 # 服务器模式
 -l 0.0.0.0:$LPORT
 # 监听端口给UDP2RAW客户端
@@ -53,8 +56,12 @@ buildServer()
 --cipher-mode xor
 # 简单xor加密
 --fix-gro
-# 修复粘包" > /usr/local/udptools/conf/udp2raw-s${MPORT}.conf
-    echo "#!/bin/bash
+# 修复粘包
+EOF
+
+#写入脚本
+cat > /usr/local/udptools/udp2raw-s${MPORT}.sh <<EOF
+#!/bin/bash
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 export PATH
 #进程名
@@ -67,24 +74,78 @@ CONFIG_FILE=/usr/local/udptools/conf/udp2raw-s${MPORT}.conf
 LOG_FILE=/usr/local/udptools/log/udp2raw-s${MPORT}.log
 #PID路径
 PID_FILE=/usr/local/udptools/pid/udp2raw-s${MPORT}.pid
-    " > /usr/local/udptools/udp2raw-s${MPORT}.sh
-    cat >> /usr/local/udptools/udp2raw-s${MPORT}.sh <<EOF
+EOF
+
+cat >> /usr/local/udptools/udp2raw-s${MPORT}.sh <<"EOF"
 checkSet(){
   #获取监听端口
-  SERVER_PORT=`cat \$CONFIG_FILE | grep '\-l ' | awk -F ":" '{print $2}'`
+  SERVER_PORT=`cat $CONFIG_FILE | grep '\-l ' | awk -F ":" '{print $2}'`
   #检查iptables规则
-  IPTALBES=`iptables -nvL | grep DROP | grep tcp | grep \$SERVER_PORT`
-  if [ ! -n "\$IPTALBES" ]; then
+  IPTALBES=`iptables -nvL | grep -v Warning | grep DROP | grep tcp | grep $SERVER_PORT`
+  if [ ! -n "$IPTALBES" ]; then
     echo "Adding iptables rules."
     #添加iptables规则
-    RULES=`\$BIN_FILE --conf-file \$CONFIG_FILE -g | grep iptables |grep -v rule`
-    \$RULES
+    RULES=`$BIN_FILE --conf-file $CONFIG_FILE -g | grep iptables |grep -v rule`
+    $RULES
   fi
   #赋权
-  setcap cap_net_raw+ep \$BIN_FILE
+  setcap cap_net_raw+ep $BIN_FILE
 }
-    EOF
-    chmod +x /usr/local/udptools/udp2raw-s${MPORT}.sh
+status(){
+  PID=`ps aux|grep $CONFIG_FILE|grep -v sudo|grep -v grep | awk '{print $2}'`
+  if [ ! -n "$PID" ]; then
+    rm -f $PID_FILE
+    echo "$PROG已停止."
+  else
+    echo $PID > $PID_FILE
+    echo "$PROG已启动. PID: $PID"
+  fi
+}
+start(){
+  checkSet
+  #启动进程
+  sudo -u nobody -b $BIN_FILE --conf-file $CONFIG_FILE >> $LOG_FILE 2>&1
+  status
+}
+stop(){
+  #结束进程
+  PID=`cat $PID_FILE`
+  kill $PID >/dev/null 2>&1
+  status
+}
+showLog(){
+  cat $LOG_FILE | tail -n 50
+}
+case "$1" in
+start)
+    echo "Starting $PROG..."
+    start
+    ;;
+stop)
+    echo "Stopping $PROG..."
+    stop
+    ;;
+restart)
+    echo "Stopping $PROG..."
+    stop
+    sleep 2
+    echo "Starting $PROG..."
+    start
+    ;;
+status)
+    status
+    ;;
+log)
+    showLog
+    ;;
+*)
+    echo "Usage: $PROG {start|stop|restart|status|log}"
+    ;;
+esac
+exit 0
+EOF
+
+chmod +x /usr/local/udptools/udp2raw-s${MPORT}.sh
 
   #判断服务模式
   if pgrep systemd-journal > /dev/null; then
