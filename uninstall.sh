@@ -3,8 +3,12 @@ PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 export PATH
 
 echo "杀掉进程"
-killall udp2raw
-killall udpspeeder
+if ps aux | grep -q -e "udp2raw"; then
+  killall udp2raw
+fi
+if ps aux | grep -q -e "udpspeeder"; then
+  killall udpspeeder
+fi
 echo "删除所有udptools文件"
 rm -rf /usr/local/udptools
 echo "删除相关服务"
@@ -24,3 +28,4 @@ if pgrep systemd-journal; then
       find /etc/init.d/ -name "udpspeeder*" | xargs -0 rm
     fi
 fi
+echo "卸载完成"
