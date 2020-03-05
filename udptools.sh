@@ -161,7 +161,22 @@ if pgrep systemd-journal > /dev/null; then
   systemctl enable udp2raw-server@${MPORT}.service
   systemctl start udp2raw-server@${MPORT}.service
 else
-    SYSTEMCTL=0
+  cat > /etc/init.d/udp2raw-s${MPORT} <<EOF
+#!/bin/bash
+# startup script for the Udp2Raw Server
+# chkconfig: 345 80 20
+# description: start the Udp2Raw deamon
+#
+# Source function library
+. /etc/rc.d/init.d/functions
+
+prog=Udp2Raw-Server-${MPORT}
+/usr/local/udptools/udp2raw-s${MPORT}.sh \$1
+EOF
+chmod +x /etc/init.d/udp2raw-s${MPORT}
+chkconfig --add udp2raw-s${MPORT}
+chkconfig udp2raw-s${MPORT} on
+service udp2raw-s${MPORT} start
 fi
 }
 
@@ -252,11 +267,27 @@ if pgrep systemd-journal > /dev/null; then
   systemctl enable udpspeeder-server@${MPORT}.service
   systemctl start udpspeeder-server@${MPORT}.service
 else
-    SYSTEMCTL=0
+
+  cat > /etc/init.d/udpspeeder-s${MPORT} <<EOF
+#!/bin/bash
+# startup script for the UDPspeeder Server
+# chkconfig: 345 80 20
+# description: start the UDPspeeder deamon
+#
+# Source function library
+. /etc/rc.d/init.d/functions
+
+prog=UDPspeeder-Server-${MPORT}
+/usr/local/udptools/udpspeeder-s${MPORT}.sh \$1
+EOF
+chmod +x /etc/init.d/udpspeeder-s${MPORT}
+chkconfig --add udpspeeder-s${MPORT}
+chkconfig udpspeeder-s${MPORT} on
+service udpspeeder-s${MPORT} start
 fi
 }
 
-buildClient()
+build_Udp2raw_Client()
 {
 #写入Udp2Raw配置
 cat > /usr/local/udptools/conf/udp2raw-c${MPORT}.conf <<EOF
@@ -274,19 +305,234 @@ cat > /usr/local/udptools/conf/udp2raw-c${MPORT}.conf <<EOF
 # 修复粘包
 EOF
 
-  #判断服务模式
-  if pgrep systemd-journal > /dev/null; then
-    SYSTEMCTL=1
-  else
-    SYSTEMCTL=0
+
+#写入Udp2Raw脚本
+cat > /usr/local/udptools/udp2raw-c${MPORT}.sh <<EOF
+#!/bin/bash
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+#进程名
+PROG=Udp2Raw-Client-${MPORT}
+#BIN路径
+BIN_FILE=/usr/local/udptools/bin/udp2raw
+#配置路径
+CONFIG_FILE=/usr/local/udptools/conf/udp2raw-c${MPORT}.conf
+#日志路径
+LOG_FILE=/usr/local/udptools/log/udp2raw-c${MPORT}.log
+#PID路径
+PID_FILE=/usr/local/udptools/pid/udp2raw-c${MPORT}.pid
+EOF
+
+cat >> /usr/local/udptools/udp2raw-c${MPORT}.sh <<"EOF"
+checkSet(){
+  #获取监听端口
+  SERVER_PORT=`cat $CONFIG_FILE | grep '\-r ' | awk -F ":" '{print $2}'`
+  SERVER_ADDRESS=`cat $CONFIG_FILE | grep '\-r ' | awk -F ":" '{print $1}' | awk '{print $2}'`
+  #检查iptables规则
+  IPTALBES=`iptables -nvL | grep DROP | grep tcp | grep $SERVER_PORT | grep $SERVER_ADDRESS`
+  echo "IPTABLES_DEBUG" >> $LOG_FILE
+  echo $IPTALBES >> $LOG_FILE
+  if [ ! -n "$IPTALBES" ]; then
+    echo "Adding iptables rules."
+    #添加iptables规则
+    RULES=`$BIN_FILE --conf-file $CONFIG_FILE -g | grep iptables |grep -v rule`
+    $RULES
   fi
-  echo $PASSWD
-  echo $REMOTEIP
-  echo $RPORT
-  echo $MPORT
-  echo $LPORT
+  #赋权
+  setcap cap_net_raw+ep $BIN_FILE
+}
+status(){
+  PID=`ps aux|grep $CONFIG_FILE|grep -v sudo|grep -v grep | awk '{print $2}'`
+  if [ ! -n "$PID" ]; then
+    rm -f $PID_FILE
+    echo "$PROG已停止."
+  else
+    echo $PID > $PID_FILE
+    echo "$PROG已启动. PID: $PID"
+  fi
+}
+start(){
+  #启动进程
+  nohup $BIN_FILE --keep-rule --conf-file $CONFIG_FILE >> $LOG_FILE 2>&1 &
+  #checkSet
+  #sudo -u nobody -b $BIN_FILE --conf-file $CONFIG_FILE >> $LOG_FILE 2>&1
+  #Centos8无法nobody运行
+  status
+}
+stop(){
+  #结束进程
+  status > /dev/null 2>&1
+  PID=`cat $PID_FILE`
+  kill $PID >/dev/null 2>&1
+  sleep 1
+  status
+}
+showLog(){
+  cat $LOG_FILE | tail -n 50
+}
+case "$1" in
+start)
+    echo "Starting $PROG..."
+    start
+    ;;
+stop)
+    echo "Stopping $PROG..."
+    stop
+    ;;
+restart)
+    echo "Stopping $PROG..."
+    stop
+    sleep 2
+    echo "Starting $PROG..."
+    start
+    ;;
+status)
+    status
+    ;;
+log)
+    showLog
+    ;;
+*)
+    echo "Usage: $PROG {start|stop|restart|status|log}"
+    ;;
+esac
+exit 0
+EOF
+
+chmod +x /usr/local/udptools/udp2raw-c${MPORT}.sh
+
+#判断服务模式
+if pgrep systemd-journal > /dev/null; then
+  if [ ! -f "/usr/lib/systemd/system/udp2raw-client@.service" ]; then
+    cp ./systemctl/service/udp2raw-client@.service /usr/lib/systemd/system/
+  fi
+  systemctl enable udp2raw-client@${MPORT}.service
+  systemctl start udp2raw-client@${MPORT}.service
+else
+  cat > /etc/init.d/udp2raw-c${MPORT} <<EOF
+#!/bin/bash
+# startup script for the Udp2Raw Client
+# chkconfig: 345 80 20
+# description: start the Udp2Raw deamon
+#
+# Source function library
+. /etc/rc.d/init.d/functions
+
+prog=Udp2Raw-Client-${MPORT}
+/usr/local/udptools/udp2raw-c${MPORT}.sh \$1
+EOF
+chmod +x /etc/init.d/udp2raw-c${MPORT}
+chkconfig --add udp2raw-c${MPORT}
+chkconfig udp2raw-c${MPORT} on
+service udp2raw-c${MPORT} start
+fi
 }
 
+build_UdpSpeeder_Client()
+{
+#写入UdpSpeeder脚本
+cat > /usr/local/udptools/udpspeeder-c${MPORT}.sh <<EOF
+#!/bin/bash
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+#进程名
+PROG=UDPspeeder-Client-${MPORT}
+#BIN路径
+BIN_FILE=/usr/local/udptools/bin/udpspeeder
+#配置参数
+CONFIG="-c -l 127.0.0.1:${LPORT} -r 127.0.0.1:${MPORT} -f20:20 --mode 0"
+#-l 127.0.0.1:${LPORT}监听端口给其他程序用
+#-r 127.0.0.1:${MPORT}连接Udp2Raw
+#日志路径
+LOG_FILE=/usr/local/udptools/log/udpspeeder-c${MPORT}.log
+#PID路径
+PID_FILE=/usr/local/udptools/pid/udpspeeder-c${MPORT}.pid
+EOF
+
+cat >> /usr/local/udptools/udpspeeder-c${MPORT}.sh <<"EOF"
+status(){
+  PID=`ps aux|grep -e "$CONFIG"|grep -v sudo|grep -v grep | awk '{print $2}'`
+  if [ ! -n "$PID" ]; then
+    rm -f $PID_FILE
+    echo "$PROG已停止."
+  else
+    echo $PID > $PID_FILE
+    echo "$PROG已启动. PID: $PID"
+  fi
+}
+start(){
+  #启动进程
+  #sudo -u nobody -b $BIN_FILE $CONFIG >> $LOG_FILE 2>&1
+  nohup $BIN_FILE $CONFIG >> $LOG_FILE 2>&1 &
+  status
+}
+stop(){
+  #结束进程
+  status > /dev/null 2>&1
+  PID=`cat $PID_FILE`
+  kill $PID >/dev/null 2>&1
+  sleep 1
+  status
+}
+showLog(){
+  cat $LOG_FILE | tail -n 50
+}
+case "$1" in
+start)
+    echo "Starting $PROG..."
+    start
+    ;;
+stop)
+    echo "Stopping $PROG..."
+    stop
+    ;;
+restart)
+    echo "Stopping $PROG..."
+    stop
+    sleep 2
+    echo "Starting $PROG..."
+    start
+    ;;
+status)
+    status
+    ;;
+log)
+    showLog
+    ;;
+*)
+    echo "Usage: $PROG {start|stop|restart|status|log}"
+    ;;
+esac
+exit 0
+EOF
+chmod +x /usr/local/udptools/udpspeeder-c${MPORT}.sh
+
+#判断服务模式
+if pgrep systemd-journal > /dev/null; then
+  if [ ! -f "/usr/lib/systemd/system/udpspeeder-client@.service" ]; then
+    cp ./systemctl/service/udpspeeder-client@.service /usr/lib/systemd/system/
+  fi
+  systemctl enable udpspeeder-client@${MPORT}.service
+  systemctl start udpspeeder-client@${MPORT}.service
+else
+  cat > /etc/init.d/udpspeeder-c${MPORT} <<EOF
+#!/bin/bash
+# startup script for the UDPspeeder Client
+# chkconfig: 345 80 20
+# description: start the UDPspeeder deamon
+#
+# Source function library
+. /etc/rc.d/init.d/functions
+
+prog=UDPspeeder-Client-${MPORT}
+/usr/local/udptools/udpspeeder-c${MPORT}.sh \$1
+EOF
+chmod +x /etc/init.d/udpspeeder-c${MPORT}
+chkconfig --add udpspeeder-c${MPORT}
+chkconfig udpspeeder-c${MPORT} on
+service udpspeeder-c${MPORT} start
+fi
+}
 
 echo
 echo "Which mode to run this?"
@@ -327,7 +573,8 @@ case $RUNMODE in
       echo""
     done
     
-    buildClient
+    build_Udp2raw_Client
+    build_UdpSpeeder_Client
   ;;
   2)
     read -p "Udp2Raw Password(Udp2Raw密码): " PASSWD
