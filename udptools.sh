@@ -51,7 +51,40 @@ buildServer()
 -k $PASSWD
 # 密码
 --cipher-mode xor
-# 简单xor加密" > /usr/local/udptools/conf/udp2raw-s${MPORT}.conf
+# 简单xor加密
+--fix-gro
+# 修复粘包" > /usr/local/udptools/conf/udp2raw-s${MPORT}.conf
+    echo "#!/bin/bash
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+#进程名
+PROG=Udp2Raw-Server-${MPORT}
+#BIN路径
+BIN_FILE=/usr/local/udptools/bin/udp2raw
+#配置路径
+CONFIG_FILE=/usr/local/udptools/conf/udp2raw-s${MPORT}.conf
+#日志路径
+LOG_FILE=/usr/local/udptools/log/udp2raw-s${MPORT}.log
+#PID路径
+PID_FILE=/usr/local/udptools/pid/udp2raw-s${MPORT}.pid
+    " > /usr/local/udptools/udp2raw-s${MPORT}.sh
+    cat >> /usr/local/udptools/udp2raw-s${MPORT}.sh <<EOF
+checkSet(){
+  #获取监听端口
+  SERVER_PORT=`cat \$CONFIG_FILE | grep '\-l ' | awk -F ":" '{print $2}'`
+  #检查iptables规则
+  IPTALBES=`iptables -nvL | grep DROP | grep tcp | grep \$SERVER_PORT`
+  if [ ! -n "\$IPTALBES" ]; then
+    echo "Adding iptables rules."
+    #添加iptables规则
+    RULES=`\$BIN_FILE --conf-file \$CONFIG_FILE -g | grep iptables |grep -v rule`
+    \$RULES
+  fi
+  #赋权
+  setcap cap_net_raw+ep \$BIN_FILE
+}
+    EOF
+    chmod +x /usr/local/udptools/udp2raw-s${MPORT}.sh
 
   #判断服务模式
   if pgrep systemd-journal > /dev/null; then
@@ -76,7 +109,9 @@ buildClient()
 -k $PASSWD
 # 密码
 --cipher-mode xor
-# 简单xor加密" > /usr/local/udptools/conf/udp2raw-c${MPORT}.conf
+# 简单xor加密
+--fix-gro
+# 修复粘包" > /usr/local/udptools/conf/udp2raw-c${MPORT}.conf
 
   #判断服务模式
   if pgrep systemd-journal > /dev/null; then
@@ -130,6 +165,7 @@ case $RUNMODE in
       fi
       echo""
     done
+    
     buildClient
   ;;
   2)
@@ -165,6 +201,7 @@ case $RUNMODE in
       fi
       echo""
     done
+    
     buildServer
   ;;
 esac
