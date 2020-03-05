@@ -8,9 +8,10 @@ Type=forking       # 表示后台运行模式。
 User=root          # 设置服务运行的用户
 Group=root         # 设置服务运行的用户组
 KillMode=control-group   # 定义systemd如何停止服务
-PIDFile=/usr/local/udptools/pid/udpspeeder-c%i.pid    # 存放PID的绝对路径
-Restart=no        # 定义服务进程退出后，systemd的重启方式，默认是不重启
-ExecStart=/usr/local/udptools/udpspeeder-c%i.sh      # 服务启动命令，命令需要绝对路径
+PIDFile=/usr/local/udptools/pid/udpspeeder-c%i.pid     # 存放PID的绝对路径
+Restart=no         # 定义服务进程退出后，systemd的重启方式，默认是不重启
+ExecStart=/usr/local/udptools/udpspeeder-c%i.sh start  # 服务启动命令，命令需要绝对路径
+ExecStop=/usr/local/udptools/udpspeeder-c%i.sh stop    # 服务停止命令，命令需要绝对路径
 PrivateTmp=true                               # 表示给服务分配独立的临时空间
 
 [Install]

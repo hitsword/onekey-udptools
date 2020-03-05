@@ -41,7 +41,7 @@ if [ ! -d "/usr/local/udptools/conf" ]; then
   mkdir /usr/local/udptools/conf
 fi
 
-buildServer()
+build_Udp2raw_Server()
 {
 #写入Udp2Raw配置
 cat > /usr/local/udptools/conf/udp2raw-s${MPORT}.conf <<EOF
@@ -113,8 +113,10 @@ start(){
 }
 stop(){
   #结束进程
+  status > /dev/null 2>&1
   PID=`cat $PID_FILE`
   kill $PID >/dev/null 2>&1
+  sleep 1
   status
 }
 showLog(){
@@ -151,6 +153,20 @@ EOF
 
 chmod +x /usr/local/udptools/udp2raw-s${MPORT}.sh
 
+#判断服务模式
+if pgrep systemd-journal > /dev/null; then
+  if [ ! -f "/usr/lib/systemd/system/udp2raw-server@.service" ]; then
+    cp ./systemctl/service/udp2raw-server@.service /usr/lib/systemd/system/
+  fi
+  systemctl enable udp2raw-server@${MPORT}.service
+  systemctl start udp2raw-server@${MPORT}.service
+else
+    SYSTEMCTL=0
+fi
+}
+
+build_UdpSpeeder_Server()
+{
 #写入UdpSpeeder脚本
 cat > /usr/local/udptools/udpspeeder-s${MPORT}.sh <<EOF
 #!/bin/bash
@@ -170,7 +186,7 @@ LOG_FILE=/usr/local/udptools/log/udpspeeder-s${MPORT}.log
 PID_FILE=/usr/local/udptools/pid/udpspeeder-s${MPORT}.pid
 EOF
 
-cat >> /usr/local/udptools/udp2raw-s${MPORT}.sh <<"EOF"
+cat >> /usr/local/udptools/udpspeeder-s${MPORT}.sh <<"EOF"
 status(){
   PID=`ps aux|grep -e "$CONFIG"|grep -v sudo|grep -v grep | awk '{print $2}'`
   if [ ! -n "$PID" ]; then
@@ -188,8 +204,10 @@ start(){
 }
 stop(){
   #结束进程
+  status > /dev/null 2>&1
   PID=`cat $PID_FILE`
   kill $PID >/dev/null 2>&1
+  sleep 1
   status
 }
 showLog(){
@@ -223,17 +241,18 @@ log)
 esac
 exit 0
 EOF
+chmod +x /usr/local/udptools/udpspeeder-s${MPORT}.sh
 
-  #判断服务模式
-  if pgrep systemd-journal > /dev/null; then
-    SYSTEMCTL=1
-  else
-    SYSTEMCTL=0
+#判断服务模式
+if pgrep systemd-journal > /dev/null; then
+  if [ ! -f "/usr/lib/systemd/system/udpspeeder-server@.service" ]; then
+    cp ./systemctl/service/udpspeeder-server@.service /usr/lib/systemd/system/
   fi
-  echo $PASSWD
-  echo $RPORT
-  echo $MPORT
-  echo $LPORT
+  systemctl enable udpspeeder-server@${MPORT}.service
+  systemctl start udpspeeder-server@${MPORT}.service
+else
+    SYSTEMCTL=0
+fi
 }
 
 buildClient()
@@ -343,6 +362,7 @@ case $RUNMODE in
       echo""
     done
     
-    buildServer
+    build_Udp2raw_Server
+    build_UdpSpeeder_Server
   ;;
 esac
