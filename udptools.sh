@@ -43,7 +43,7 @@ fi
 
 buildServer()
 {
-#写入配置
+#写入Udp2Raw配置
 cat > /usr/local/udptools/conf/udp2raw-s${MPORT}.conf <<EOF
 -s
 # 服务器模式
@@ -59,7 +59,7 @@ cat > /usr/local/udptools/conf/udp2raw-s${MPORT}.conf <<EOF
 # 修复粘包
 EOF
 
-#写入脚本
+#写入Udp2Raw脚本
 cat > /usr/local/udptools/udp2raw-s${MPORT}.sh <<EOF
 #!/bin/bash
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
@@ -81,7 +81,9 @@ checkSet(){
   #获取监听端口
   SERVER_PORT=`cat $CONFIG_FILE | grep '\-l ' | awk -F ":" '{print $2}'`
   #检查iptables规则
-  IPTALBES=`iptables -nvL | grep -v Warning | grep DROP | grep tcp | grep $SERVER_PORT`
+  IPTALBES=`iptables -nvL | grep DROP | grep tcp | grep $SERVER_PORT`
+  echo "IPTABLES_DEBUG" >> $LOG_FILE
+  echo $IPTALBES >> $LOG_FILE
   if [ ! -n "$IPTALBES" ]; then
     echo "Adding iptables rules."
     #添加iptables规则
@@ -102,9 +104,11 @@ status(){
   fi
 }
 start(){
-  checkSet
   #启动进程
-  sudo -u nobody -b $BIN_FILE --conf-file $CONFIG_FILE >> $LOG_FILE 2>&1
+  sudo -u root -b $BIN_FILE --keep-rule --conf-file $CONFIG_FILE >> $LOG_FILE 2>&1
+  #checkSet
+  #sudo -u nobody -b $BIN_FILE --conf-file $CONFIG_FILE >> $LOG_FILE 2>&1
+  #Centos8无法nobody运行
   status
 }
 stop(){
@@ -147,6 +151,79 @@ EOF
 
 chmod +x /usr/local/udptools/udp2raw-s${MPORT}.sh
 
+#写入UdpSpeeder脚本
+cat > /usr/local/udptools/udpspeeder-s${MPORT}.sh <<EOF
+#!/bin/bash
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+#进程名
+PROG=UDPspeeder-Server-${MPORT}
+#BIN路径
+BIN_FILE=/usr/local/udptools/bin/udpspeeder
+#配置参数
+CONFIG="-s -l 127.0.0.1:${MPORT} -r 127.0.0.1:${RPORT} -f20:20 --mode 0"
+#-l 127.0.0.1:${MPORT}监听端口给udp2raw用
+#-r 127.0.0.1:${RPORT}连接原始服务端口
+#日志路径
+LOG_FILE=/usr/local/udptools/log/udpspeeder-s${MPORT}.log
+#PID路径
+PID_FILE=/usr/local/udptools/pid/udpspeeder-s${MPORT}.pid
+EOF
+
+cat >> /usr/local/udptools/udp2raw-s${MPORT}.sh <<"EOF"
+status(){
+  PID=`ps aux|grep -e "$CONFIG"|grep -v sudo|grep -v grep | awk '{print $2}'`
+  if [ ! -n "$PID" ]; then
+    rm -f $PID_FILE
+    echo "$PROG已停止."
+  else
+    echo $PID > $PID_FILE
+    echo "$PROG已启动. PID: $PID"
+  fi
+}
+start(){
+  #启动进程
+  sudo -u nobody -b $BIN_FILE $CONFIG >> $LOG_FILE 2>&1
+  status
+}
+stop(){
+  #结束进程
+  PID=`cat $PID_FILE`
+  kill $PID >/dev/null 2>&1
+  status
+}
+showLog(){
+  cat $LOG_FILE | tail -n 50
+}
+case "$1" in
+start)
+    echo "Starting $PROG..."
+    start
+    ;;
+stop)
+    echo "Stopping $PROG..."
+    stop
+    ;;
+restart)
+    echo "Stopping $PROG..."
+    stop
+    sleep 2
+    echo "Starting $PROG..."
+    start
+    ;;
+status)
+    status
+    ;;
+log)
+    showLog
+    ;;
+*)
+    echo "Usage: $PROG {start|stop|restart|status|log}"
+    ;;
+esac
+exit 0
+EOF
+
   #判断服务模式
   if pgrep systemd-journal > /dev/null; then
     SYSTEMCTL=1
@@ -161,7 +238,9 @@ chmod +x /usr/local/udptools/udp2raw-s${MPORT}.sh
 
 buildClient()
 {
-    echo "-c
+#写入Udp2Raw配置
+cat > /usr/local/udptools/conf/udp2raw-c${MPORT}.conf <<EOF
+-c
 # 客户端模式
 -l 127.0.0.1:$MPORT
 # 监听端口给UdpSpeeder用
@@ -172,7 +251,8 @@ buildClient()
 --cipher-mode xor
 # 简单xor加密
 --fix-gro
-# 修复粘包" > /usr/local/udptools/conf/udp2raw-c${MPORT}.conf
+# 修复粘包
+EOF
 
   #判断服务模式
   if pgrep systemd-journal > /dev/null; then

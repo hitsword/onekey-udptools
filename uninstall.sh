@@ -15,10 +15,12 @@ echo "删除相关服务"
 #判断服务模式
 if pgrep systemd-journal > /dev/null; then
     if ls /usr/lib/systemd/system/ | grep -q -e "udp2raw*.service"; then
-      find /usr/lib/systemd/system/ -name "udp2raw*.service" | xargs -0 rm
+      find /etc/systemd/system/ -name "udp2raw*" | xargs -0 rm
+      find /usr/lib/systemd/system/ -name "udp2raw*" | xargs -0 rm
     fi
     if ls /usr/lib/systemd/system/ | grep -q -e "udpspeeder*.service"; then
-      find /usr/lib/systemd/system/ -name "udpspeeder*.service" | xargs -0 rm
+      find /etc/systemd/system/ -name "udpspeeder*" | xargs -0 rm
+      find /usr/lib/systemd/system/ -name "udpspeeder*" | xargs -0 rm
     fi
   else
     if ls /etc/init.d/ | grep -q -e "udp2raw*"; then
