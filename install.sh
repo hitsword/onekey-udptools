@@ -86,6 +86,9 @@ fi
 if [ ! -d "/usr/local/udptools/log" ]; then
   mkdir /usr/local/udptools/log
 fi
+if [ ! -d "/usr/local/udptools/conf" ]; then
+  mkdir /usr/local/udptools/conf
+fi
 
 echo "安装完成,请使用udptools脚本添加服务"
 echo "Udp2Raw BIN: /usr/local/udptools/bin/udp2raw"
