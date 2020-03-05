@@ -552,7 +552,7 @@ case $RUNMODE in
     done
     while [[ ! "$MPORT" =~ [1-65535] ]];do
       read -p "Middle Port(Udp2Raw与UDPSpeeder中间端口): " MPORT
-      CHECKMPORT=`netstat -ntl | grep $MPORT`
+      CHECKMPORT=`netstat -nul | grep $MPORT`
       if [[ "$CHECKMPORT" != "" ]]; then
         MPORT=0
         echo "端口已被占用";
@@ -561,7 +561,7 @@ case $RUNMODE in
     done
     while [[ ! "$LPORT" =~ [1-65535] ]];do
       read -p "Listen Port(监听给本地其他业务用端口): " LPORT
-      CHECKLPORT=`netstat -ntl | grep $LPORT`
+      CHECKLPORT=`netstat -nul | grep $LPORT`
       if [[ "$CHECKLPORT" != "" ]]; then
         LPORT=0
         echo "端口已被占用";
@@ -585,7 +585,7 @@ case $RUNMODE in
     done
     while [[ ! "$MPORT" =~ [1-65535] ]];do
       read -p "Middle Port(Udp2Raw与UDPSpeeder中间端口): " MPORT
-      CHECKMPORT=`netstat -ntl | grep $MPORT`
+      CHECKMPORT=`netstat -nul | grep $MPORT`
       if [[ "$CHECKMPORT" != "" ]]; then
         MPORT=0
         echo "端口已被占用";
