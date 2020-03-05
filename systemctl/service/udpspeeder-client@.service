@@ -1,18 +1,15 @@
-[Unit]   # 主要是服务说明
-Description=UdpSpeederClient - %i  # 简单描述服务
-After=network.target    # 描述服务类别，表示本服务需要在network服务启动后在启动
-Before=                 # 表示需要在某些服务启动之前启动，After和Before字段只涉及启动顺序，不涉及依赖关系。
+[Unit]
+Description=UdpSpeederClient - %i
+After=network.target
 
-[Service]  # 核心区域
-Type=forking       # 表示后台运行模式。
-User=root          # 设置服务运行的用户
-Group=root         # 设置服务运行的用户组
-KillMode=control-group   # 定义systemd如何停止服务
-PIDFile=/usr/local/udptools/pid/udpspeeder-c%i.pid     # 存放PID的绝对路径
-Restart=no         # 定义服务进程退出后，systemd的重启方式，默认是不重启
-ExecStart=/usr/local/udptools/udpspeeder-c%i.sh start  # 服务启动命令，命令需要绝对路径
-ExecStop=/usr/local/udptools/udpspeeder-c%i.sh stop    # 服务停止命令，命令需要绝对路径
-PrivateTmp=true                               # 表示给服务分配独立的临时空间
+[Service]
+Type=forking
+KillMode=process
+PIDFile=/usr/local/udptools/pid/udpspeeder-c%i.pid
+Restart=no
+ExecStart=/usr/local/udptools/udpspeeder-c%i.sh start
+ExecStop=/usr/local/udptools/udpspeeder-c%i.sh stop
+PrivateTmp=true
 
 [Install]
-WantedBy=multi-user.target  # 多用户
+WantedBy=multi-user.target

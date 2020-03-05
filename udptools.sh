@@ -105,7 +105,7 @@ status(){
 }
 start(){
   #启动进程
-  sudo -u root -b $BIN_FILE --keep-rule --conf-file $CONFIG_FILE >> $LOG_FILE 2>&1
+  nohup $BIN_FILE --keep-rule --conf-file $CONFIG_FILE >> $LOG_FILE 2>&1 &
   #checkSet
   #sudo -u nobody -b $BIN_FILE --conf-file $CONFIG_FILE >> $LOG_FILE 2>&1
   #Centos8无法nobody运行
@@ -199,7 +199,8 @@ status(){
 }
 start(){
   #启动进程
-  sudo -u nobody -b $BIN_FILE $CONFIG >> $LOG_FILE 2>&1
+  #sudo -u nobody -b $BIN_FILE $CONFIG >> $LOG_FILE 2>&1
+  nohup $BIN_FILE $CONFIG >> $LOG_FILE 2>&1 &
   status
 }
 stop(){
