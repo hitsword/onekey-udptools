@@ -25,11 +25,36 @@ if [ "$IPTABLES" == '' ]; then
     yum install iptables -y
   fi
 fi
+#检查目录
+if [ ! -d "/usr/local/udptools" ]; then
+  echo "未安装udptools,请先安装."
+  exit
+fi
+if [ ! -d "/usr/local/udptools/pid" ]; then
+  mkdir /usr/local/udptools/pid
+fi
+if [ ! -d "/usr/local/udptools/log" ]; then
+  mkdir /usr/local/udptools/log
+fi
+if [ ! -d "/usr/local/udptools/conf" ]; then
+  mkdir /usr/local/udptools/conf
+fi
 
 buildServer()
 {
+    echo "-s
+# 服务器模式
+-l 0.0.0.0:$LPORT
+# 监听端口给UDP2RAW客户端
+-r 127.0.0.1:$MPORT
+# 连接UDPSpeeder端口
+-k $PASSWD
+# 密码
+--cipher-mode xor
+# 简单xor加密" > /usr/local/udptools/conf/udp2raw-s${MPORT}.conf
+
   #判断服务模式
-  if pgrep systemd-journal; then
+  if pgrep systemd-journal > /dev/null; then
     SYSTEMCTL=1
   else
     SYSTEMCTL=0
@@ -42,8 +67,19 @@ buildServer()
 
 buildClient()
 {
+    echo "-c
+# 客户端模式
+-l 127.0.0.1:$MPORT
+# 监听端口给UdpSpeeder用
+-r $REMOTEIP:$RPORT
+# 连接UDP2RAW服务端
+-k $PASSWD
+# 密码
+--cipher-mode xor
+# 简单xor加密" > /usr/local/udptools/conf/udp2raw-c${MPORT}.conf
+
   #判断服务模式
-  if pgrep systemd-journal; then
+  if pgrep systemd-journal > /dev/null; then
     SYSTEMCTL=1
   else
     SYSTEMCTL=0
