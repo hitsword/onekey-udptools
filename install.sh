@@ -1,8 +1,8 @@
 #!/bin/bash
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 export PATH
-UDP2RAW_URL=https://soft.huayizhiyun.com/network/udptools/udp2raw/udp2raw_20190716.tar.gz
-UDPSPEEDER_URL=https://soft.huayizhiyun.com/network/udptools/udpspeeder/speederv2_20190121.tar.gz
+UDP2RAW_URL=https://soft.huayizhiyun.com/network/udptools/udp2raw/udp2raw_20200715.tar.gz
+UDPSPEEDER_URL=https://soft.huayizhiyun.com/network/udptools/udpspeeder/speederv2_20200714.tar.gz
 
 #判断系统和决定BIN名
 if [[ `getconf WORD_BIT` = '32' && `getconf LONG_BIT` = '64' ]] ; then
@@ -37,7 +37,7 @@ cd /usr/local/udptools/src
 
 if [ ! -f "/usr/local/udptools/src/$UDP2RAW_BIN" ]; then
     if [ ! -f "/usr/local/udptools/src/udp2raw.tar.gz" ]; then
-      wget -O udp2raw.tar.gz https://soft.huayizhiyun.com/network/udptools/udp2raw/udp2raw_20190716.tar.gz
+      wget -O udp2raw.tar.gz $UDP2RAW_URL
     fi
     tar -zxvf udp2raw.tar.gz
 fi
@@ -63,7 +63,7 @@ fi
 cd /usr/local/udptools/src
 if [ ! -f "/usr/local/udptools/src/$UDPSPEEDER_BIN" ]; then
 		if [ ! -f "/usr/local/udptools/src/udpspeeder.tar.gz" ]; then
-		  wget -O udpspeeder.tar.gz https://soft.huayizhiyun.com/network/udptools/udpspeeder/speederv2_20190121.tar.gz
+		  wget -O udpspeeder.tar.gz $UDPSPEEDER_URL
 		fi
 		tar -zxvf udpspeeder.tar.gz
 fi

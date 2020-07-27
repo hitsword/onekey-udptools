@@ -203,7 +203,7 @@ EOF
 
 cat >> /usr/local/udptools/udpspeeder-s${MPORT}.sh <<"EOF"
 status(){
-  PID=`ps aux|grep -e "$CONFIG"|grep -v sudo|grep -v grep | awk '{print $2}'`
+  PID=`ps aux|grep udpspeeder|grep ${MPORT}|grep -v sudo|grep -v grep | awk '{print $2}'`
   if [ ! -n "$PID" ]; then
     rm -f $PID_FILE
     echo "$PROG已停止."
