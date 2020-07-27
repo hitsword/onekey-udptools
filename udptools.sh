@@ -199,11 +199,13 @@ CONFIG="-s -l 127.0.0.1:${MPORT} -r 127.0.0.1:${RPORT} -f20:20 --mode 0"
 LOG_FILE=/usr/local/udptools/log/udpspeeder-s${MPORT}.log
 #PID路径
 PID_FILE=/usr/local/udptools/pid/udpspeeder-s${MPORT}.pid
+#PS查找进程用的关键词
+PSKEY=":${MPORT}"
 EOF
 
 cat >> /usr/local/udptools/udpspeeder-s${MPORT}.sh <<"EOF"
 status(){
-  PID=`ps aux|grep udpspeeder|grep ${MPORT}|grep -v sudo|grep -v grep | awk '{print $2}'`
+  PID=`ps aux|grep udpspeeder|grep "$PSKEY"|grep -v sudo|grep -v grep | awk '{print $2}'`
   if [ ! -n "$PID" ]; then
     rm -f $PID_FILE
     echo "$PROG已停止."
