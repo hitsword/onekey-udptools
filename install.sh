@@ -1,7 +1,7 @@
 #!/bin/bash
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 export PATH
-UDP2RAW_URL=https://soft.huayizhiyun.com/network/udptools/udp2raw/udp2raw_20200715.tar.gz
+UDP2RAW_URL=https://soft.huayizhiyun.com/network/udptools/udp2raw/udp2raw_20200727.tar.gz
 UDPSPEEDER_URL=https://soft.huayizhiyun.com/network/udptools/udpspeeder/speederv2_20200714.tar.gz
 
 #判断系统和决定BIN名
