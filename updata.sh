@@ -83,10 +83,10 @@ mv /usr/local/udptools/bin/udpspeeder /usr/local/udptools/bin/udpspeeder.bak
 cp /usr/local/udptools/src/$UDPSPEEDER_BIN /usr/local/udptools/bin/udpspeeder
 }
 
-if [ ! -f "/usr/local/udptools/bin/udp2raw" ]; then
+if [  -f "/usr/local/udptools/bin/udp2raw" ]; then
     Get_udp2raw
 fi 
-if [ ! -f "/usr/local/udptools/bin/udpspeeder" ]; then
+if [  -f "/usr/local/udptools/bin/udpspeeder" ]; then
     Get_udpspeeder
 fi 
 if [ ! -d "/usr/local/udptools/pid" ]; then
