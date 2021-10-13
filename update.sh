@@ -2,7 +2,7 @@
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 export PATH
 UDP2RAW_URL=https://soft.huayizhiyun.com/network/udptools/udp2raw/udp2raw_20200818.tar.gz
-UDPSPEEDER_URL=https://soft.huayizhiyun.com/network/udptools/udpspeeder/speederv2_20200818.tar.gz
+UDPSPEEDER_URL=https://soft.huayizhiyun.com/network/udptools/udpspeeder/speederv2_20210116.tar.gz
 
 #删除旧版本
 rm -rf /usr/local/udptools/src/*
@@ -40,7 +40,7 @@ cd /usr/local/udptools/src
 
 if [ ! -f "/usr/local/udptools/src/$UDP2RAW_BIN" ]; then
     if [ ! -f "/usr/local/udptools/src/udp2raw.tar.gz" ]; then
-      wget -O udp2raw.tar.gz $UDP2RAW_URL
+      wget -O udp2raw.tar.gz $UDP2RAW_URL --no-check-certificate
     fi
     tar -zxvf udp2raw.tar.gz
 fi
@@ -69,7 +69,7 @@ fi
 cd /usr/local/udptools/src
 if [ ! -f "/usr/local/udptools/src/$UDPSPEEDER_BIN" ]; then
 		if [ ! -f "/usr/local/udptools/src/udpspeeder.tar.gz" ]; then
-		  wget -O udpspeeder.tar.gz $UDPSPEEDER_URL
+		  wget -O udpspeeder.tar.gz $UDPSPEEDER_URL --no-check-certificate
 		fi
 		tar -zxvf udpspeeder.tar.gz
 fi
