@@ -192,7 +192,7 @@ PROG=UDPspeeder-Server-${MPORT}
 #BIN路径
 BIN_FILE=/usr/local/udptools/bin/udpspeeder
 #配置参数
-CONFIG="-s -l 127.0.0.1:${MPORT} -r 127.0.0.1:${RPORT} --mode 0 -f10:6 --timeout 3"
+CONFIG="-s -l 127.0.0.1:${MPORT} -r 127.0.0.1:${RPORT} --mode 0 -f2:1 --timeout 1"
 #-l 127.0.0.1:${MPORT}监听端口给udp2raw用
 #-r 127.0.0.1:${RPORT}连接原始服务端口
 #日志路径
@@ -442,7 +442,7 @@ PROG=UDPspeeder-Client-${MPORT}
 #BIN路径
 BIN_FILE=/usr/local/udptools/bin/udpspeeder
 #配置参数
-CONFIG="-c -l 127.0.0.1:${LPORT} -r 127.0.0.1:${MPORT} --mode 0 -f10:6 --timeout 3"
+CONFIG="-c -l 127.0.0.1:${LPORT} -r 127.0.0.1:${MPORT} --mode 0 -f2:1 --timeout 1"
 #-l 127.0.0.1:${LPORT}监听端口给其他程序用
 #-r 127.0.0.1:${MPORT}连接Udp2Raw
 #日志路径
